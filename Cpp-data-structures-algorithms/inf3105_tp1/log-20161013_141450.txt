@@ -1,0 +1,29 @@
+#Machine :  oto
+#CPU :
+#Date début : 20161013_141450
+#Limite de 120 secondes par test
+#
+Fichier_test	#Stat	#Imm	#Cli	Opt?	CPU	Mém.(k)
+testC00.txt	1	13	91	1	0.00	1164k
+testC01.txt	1	11	30	1	0.00	1164k
+testC02.txt	1	1000	2322	1	0.00	1352k
+testC03.txt	1	5000	4025	1	0.01	2176k
+testD00.txt	2	13	137	1	0.00	1164k
+testD01.txt	2	11	40	1	0.00	1164k
+testD02.txt	2	1000	3406	1	0.00	1352k
+testD03.txt	2	5000	5258	1	0.01	2176k
+testD04.txt	2	3	12	1	0.00	1164k
+testD05.txt	2	3	12	1	0.00	1164k
+testG00.txt	3	11	43	0	0.00	1164k
+testG01.txt	11	11	38	0	0.00	1168k
+testG02.txt	3	5000	31290	1	0.02	2176k
+testG03.txt	4	5000	24409	1	0.01	2176k
+testG04.txt	5	1000	7836	0	0.00	1352k
+testG05.txt	8	50	1021	1	0.00	1176k
+testG06.txt	2	11	30	1	0.00	1164k
+testH00.txt	8	100	2250	0	0.00	1192k
+testH01.txt	3	5000	31290	1	0.02	2176k
+testH02.txt	8	1000	68926	0	0.00	1352k
+testH03.txt	8	5000	162630	0	0.02	2176k
+testH04.txt	1	100000	37336	1	6.53	20556k
+testH05.txt	1	20000	45450	1	0.99	5324k

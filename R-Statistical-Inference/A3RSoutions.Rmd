@@ -1,0 +1,421 @@
+---
+title: "A3RSolutions"
+author: "Julie Chao-Jung Wu"
+date: "10/27/2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Question 1
+
+```{r}
+N = 100000
+W2samples =  array(0, dim = N)
+for(i in 1:N){
+  W1 = runif (1, 0, 1)
+  W2 = runif (1, 0, W1)
+  W2samples[i] = W2
+}
+mean(W2samples)
+var(W2samples)
+
+```
+
+## Question 2 
+Q2-3: overlay
+
+```{r}
+listn = c(2, 10, 100) # degree of freedom
+N = 1000 # size of sample
+
+for(n in listn){
+  W1 = rchisq(N, n)
+  
+  W2 =  array(0, dim = N)
+  for(i in 1:N){
+    Z = rnorm(n)
+    W = Z^2
+    W2[i] = sum(W)
+  }
+  
+  msg = paste0("Densities of W1 and W2, n = ", n )
+  plot(density(W1), main = msg, col=1,lwd=3, xlab="") 
+  lines(density(W2),col=2,lwd=3)
+  legend(x = "topright",
+       col = c(1,2), lty = 1, lwd = 3,
+       legend = c("density(W1)", "density(W2)"))
+}
+
+
+
+```
+
+## Question 4
+
+```{r}
+#######
+# Q4-1
+#######
+N = 10000
+n = 100
+beta = 3
+ccoef = 0.95
+
+b = qgamma(ccoef, shape = n, scale = 1/n)
+b
+
+data = rep(2,N)
+for(i in 1:N){
+  Yi = rbeta(n, shape1 = 1, shape2 = beta)
+  UB = -n * b / sum(log(1-Yi))
+  C = 1*(beta < UB)
+  data[i] = C
+}
+sum(data)/N
+#= Close to 95% of the one-sided CIs contain beta = 3
+
+
+#######
+# Q4-2
+#######
+mypath = "C:/Users/JulieCJWu/Dropbox/UQAM/2_Lectures/MATH682 A23 McGill via IUT/TP3/Rstudio"
+setwd(mypath)
+getwd()
+
+dat = read.csv("covid1.csv", sep=",")
+Y=dat$rate_mort_period1
+summary(Y)
+hist(Y)
+
+ccoef = 0.95
+n = length(Y)
+b = qgamma(ccoef, shape = n, scale = 1/n)
+b
+
+UB = -n * b / sum(log(1-Y))
+UB
+print(paste0("beta's one-sided CI with 0.95 confidence is: [-infinity, ", UB, "]"))
+
+#= visualize the the effect of beta
+y=seq(from= 0, to = 1,by = 0.001)
+f1_y_beta = dbeta(y, shape1=1, shape2=0.5)
+f2_y_beta = dbeta(y, shape1=1, shape2=10)
+f3_y_beta = dbeta(y, shape1=1, shape2=0.01)
+
+plot(y,f1_y_beta, type='l', lwd=2, col=2, xlim = c(0,1), ylab = "Beta density")
+lines(y,f2_y_beta,col=3,lwd=3)
+lines(y,f3_y_beta,col=4,lwd=3)
+legend(x = "topleft",
+       col = c(2,3,4), lwd = 3, cex = 0.5,
+       legend = c('beta=0.5', 'beta=10', 'beta=0.01'))
+
+
+```
+
+## Question 5 
+
+```{r}
+#######
+# Q5-3
+#######
+J = 4
+listN = c(5, 10, 50, 100, 500, 1000, 5000)
+
+Jhat_data = array(0, dim = length(listN))
+for(i in 1:length(listN)){
+  N = listN[i]
+  X = runif(N, 0, 2)
+  Jhat = 2 * sum(X^3)/N
+  Jhat_data[i] = Jhat
+}
+
+sample_size=listN
+plot(sample_size,Jhat_data,col=2,lwd=5, main="Jhat")
+abline(h=J,col=4,lwd=2)
+legend(x = "bottomleft",
+       col = c(2,4), lwd = 3, cex = 0.5,
+       legend = c('Jhat', 'J'))
+
+#######
+# Q5-4
+#######
+N = 1000
+
+y = runif(N, 0, 1.25)
+jhat = (1/N) * sum(1.25 *( 1 / sqrt(2 * pi) ) * exp(- y^2 /2))
+jhat
+Ptarget = jhat + 0.5
+Ptarget
+
+#= verify with pnorm()
+J = pnorm(1.25)
+J
+#= We can see that Monte Carlo Integration gave a good approximation.
+
+#= visualize the regions
+y=seq(from= -10, to = 10,by = 0.01)
+f_y_std = dnorm(y)
+
+plot(y,f_y_std, type='l', lwd=2, col=2, xlim = c(-5,5), ylab = "density")
+abline(v=1.25, col = 1 , lty = 1, lwd = 3)
+abline(v=0, col = 5 , lty = 2, lwd = 3)
+legend(x = "topleft",
+       col = c(2,1,5), lwd = 3, cex = 0.5,
+       legend = c('Standard Normal Distribution', 'Y = 1.25', 'Y = 0'))
+
+
+
+
+
+
+
+
+
+
+```
+
+## Question 6
+
+```{r}
+theta = runif(1, min = -10, max = 10)
+theta
+listn = c(1, 3, 5, 8, 10, 20, 30, 40, 50, 100, 150, 200)
+N = 10000
+
+thetaHarray =  array(0, dim = c(2,length(listn),N))
+for(i in 1:N){
+  for(j in 1:length(listn)){
+    Y = runif(listn[j], theta, theta+1)
+    thetaH1 = mean(Y) - 1/2
+    thetaH2 = max(Y) - n/(n+1)
+    thetaHarray[1,j,i] = thetaH1
+    thetaHarray[2,j,i] = thetaH2
+  }
+}
+
+meansH1 =  array(0, dim = length(listn))
+meansH2 =  array(0, dim = length(listn))
+ratios =  array(0, dim = length(listn))
+for(j in 1:length(listn)){
+  mean_thetaH1 = mean(thetaHarray[1,j,])
+  var_thetaH1 = var(thetaHarray[1,j,])
+  
+  mean_thetaH2 = mean(thetaHarray[2,j,])
+  var_thetaH2 = var(thetaHarray[2,j,])
+  
+  meansH1[j] = mean_thetaH1
+  meansH2[j] = mean_thetaH2
+  
+  ratio = var_thetaH1/ var_thetaH2
+  ratios[j] = ratio
+}
+
+sample_size=listn
+plot(sample_size,meansH2,col=2,lwd=5, main="means of estimators", ylab="means")
+points(sample_size,meansH1,col=3,lwd=3)
+abline(h=theta,col=4,lwd=2)
+legend(x = "bottomright",
+       col = c(2,3,4), lwd = 3,
+       legend = c('thetaH2', 'thetaH1', 'true theta'))
+
+msg = "Ratios of Var(thetaH1) / Var(thetaH2)"
+plot(sample_size,ratios,col=2,lwd=3,main=msg, pch=20)
+abline(h=1,col=3,lwd=1)
+abline(sample_size,sample_size/12,col=4,lwd=1)
+legend(x = "bottomright",
+       col = c(2,3,4), lwd = 1,
+       legend = c('ratios', 'ratio=1', 'sample_size /12'))
+
+
+#= test theoretical ratio
+for (n in 1:13){
+  ratio = (n+2)/12 * ( (n+1)/ n) ^2
+  print(c(n, ratio, ratio/(n/12)))
+}
+
+```
+
+## Question 7
+
+```{r}
+#######
+# Q7(1)
+#######
+n = 1000
+p = 0.01
+lambda = 10
+
+myBinom = 0
+approxPois = 0
+for(i in 0:7){
+  Pbinom = choose(n, i) * (p^i) * (1-p)^(n-i)
+  Ppoisson = exp(-lambda)* lambda^i / factorial(i)
+  myBinom = myBinom + Pbinom
+  approxPois = approxPois + Ppoisson
+}
+myBinom
+approxPois
+#= These two values are close.
+
+wanted = 1- approxPois
+wanted
+
+#= verify by R
+1 - pbinom(7, 1000, 0.01)
+1 - ppois(7, 10)
+
+#= simulation
+N = 10000
+n = 1000
+p = 0.01
+
+data = rep(2,N)
+for(j in 1: N){
+  success = 0 # kidney fail
+  for(i in 1:n){
+    kidneyResult = rbinom(1, 1, p)
+    success = success + kidneyResult
+  }
+  success
+  C = 1*(success > 7)
+  data[j] = C
+}
+sum(data)/N
+
+
+
+
+
+
+
+#######
+# Q7(2)
+#######
+1 - pnorm(20.15, 20, sqrt(1.2*1.2/100))
+1 - pnorm(1.25)
+
+#= simulation
+N = 10000
+n = 100
+
+inspection = 0
+for(i in 1:N){
+  X = rnorm (n, 20, 1.2)
+  C = 1*(sum(X) > 2015)
+  inspection = inspection + C
+}
+inspectionRate = inspection /N
+inspectionRate
+
+
+```
+
+## Question 8
+
+```{r}
+dat = read.csv("covid1.csv", sep=",")
+Y=dat$rate_vaccination
+summary(Y)
+
+plot(1:length(Y),Y,col=2,lwd=2, pch = 20, main="rate_vaccination per county")
+
+#= From the plot above we can see an outlier instance. Since the vaccination rate is <= 1, I will remove the instance with rate greater than 1.
+for(i in 1:length(Y)){
+  v = Y[i]
+  if(v > 1){
+    print(c("line, value = ", i, v))    
+  }
+}
+Y2 = Y[-341]
+summary(Y2)
+
+plot(1:length(Y2),Y2,col=2,lwd=2, pch = 20, main="rate_vaccination per county, outlier removed")
+
+
+#= estimate of E(Y)
+mean(Y)
+mean(Y2)
+mean(Y) - mean(Y2)
+#= How would the erroneous value have affected your estimate of E(Y)? The erroneous value increased the the estimate of E(Y) mean vaccination rate by 0.07.
+
+
+
+
+########
+# Q8(2)
+########
+confcoef = 0.9
+alpha = 1- confcoef
+z = qnorm(alpha/2)               
+
+estimator = mean(Y2)
+sigma_estimator = sqrt(var(Y2)/length(Y2))
+c(estimator, z, sigma_estimator)
+
+UB = estimator - z * sigma_estimator
+LB = estimator + z * sigma_estimator
+
+#= CI at confidence level 90% that the true mean falls into this interval.
+c(LB,UB)
+
+
+
+#= simulation
+N = 10000
+n = 2072
+
+#= random assign theta as the expectation.
+#= test on three distributions which I can define easily their expectation.
+theta = 0.7
+sigma = 0.2
+
+#= dist 1
+data = rep(2,N)
+for(i in 1:N){
+  Y = rnorm(n, theta, sigma)
+  estimator = mean(Y)
+  var_estimator = sqrt(var(Y)/n)
+  UB = estimator - z * var_estimator
+  LB = estimator + z * var_estimator
+  c(LB, UB)
+  C = 1*((theta<=UB)&&(theta>=LB))
+  data[i] = C
+}
+sum(data)/N
+
+
+
+#= dist 2
+data = rep(2,N)
+for(i in 1:N){
+  Y = rexp(n, rate=1/theta)
+  estimator = mean(Y)
+  var_estimator = sqrt(var(Y)/n)
+  UB = estimator - z * var_estimator
+  LB = estimator + z * var_estimator
+  c(LB, UB)
+  C = 1*((theta<=UB)&&(theta>=LB))
+  data[i] = C
+}
+sum(data)/N
+
+
+
+#= dist 3
+data = rep(2,N)
+for(i in 1:N){
+  Y = rgamma(n, shape = 1, scale = theta)
+  estimator = mean(Y)
+  var_estimator = sqrt(var(Y)/n)
+  UB = estimator - z * var_estimator
+  LB = estimator + z * var_estimator
+  c(LB, UB)
+  C = 1*((theta<=UB)&&(theta>=LB))
+  data[i] = C
+}
+sum(data)/N
+
+```

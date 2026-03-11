@@ -1,0 +1,285 @@
+---
+title: "AS4"
+author: "Julie Chao-Jung Wu"
+date: "12/05/2023"
+output: html_document
+---
+  
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Question 2
+
+```{r}
+mypath = "C:/Users/JulieCJWu/Dropbox/UQAM/2_Lectures/MATH682 A23 McGill via IUT/TP4/"
+setwd(mypath)
+getwd()
+
+#start_date,emplacement_pk_start,end_date,emplacement_pk_end,duration_sec,is_member
+dat = read.csv("bixi.csv", sep=",")
+Y=dat$duration_sec
+summary(Y)
+hist(Y, breaks = 100)
+length(Y)
+
+#(b) provide a plot of the function P(Y >= y; theta_hat)
+# theta_hat = mean(Y)
+y=seq(from= 0, to = 10000,by = 0.01)
+plot(y, exp(-y/median(Y)), type='l', lwd=2, col=2, ylab = "P(Y >= y)")
+abline(v=median(Y))
+
+#(c) get E(Y) and x
+EY = mean(Y)
+EY
+  
+  
+x = - mean(Y) *log(0.5)
+x
+median(Y)
+
+
+
+
+```
+
+## Question 3
+
+```{r}
+### Question3 (2)
+options(warn=-1)
+#library(ggplot2)
+#library(plot3D)
+#library(plotly)
+
+nsample = 1000
+alphaT = 0.5
+betaT = 171
+sample = rbeta(nsample,shape1 = alphaT, shape2 = betaT)
+
+#log likelihood funciton
+logLikelihoodBeta = function(theta, data){
+  n = length(data)
+  alpha = theta[1]
+  beta = theta[2]
+  A1 = n * log (gamma(alpha + beta))
+  A2 = n * log(gamma(alpha))
+  A3 = n * log(gamma(beta))
+  A = -n *log(beta(alpha, beta))
+  B = (alpha - 1) * sum (log(data))
+  C = (beta -1) * sum(log(1 - data))
+  return(A + B + C)
+  #return(A1 - A2 - A3 + B + C) #For term A, using composite gamma is mathematically correct. But it seems that using beta gives better approximations during the calculation behind the scene (in R). 
+}
+
+negativelogLikelihoodBeta = function(theta,data){
+  return(-logLikelihoodBeta(theta,data))
+}
+
+optG = 0
+optG = optim(par= c(0.5,1), fn=negativelogLikelihoodBeta, data = sample)
+#= verify of optG$par is close to (alphaT, betaT); if yes, the code is okay.
+optG$par
+c(alphaT, betaT)
+
+#= verify if expectation is close to sample mean; if yes, the code is okay.
+Es = optG$par[1]/(optG$par[1] + optG$par[2])
+Es
+mean(sample)
+
+
+#= Now let's work on the real data
+dat = read.csv("covid1.csv", sep=",")
+Y=dat$rate_mort_period1
+Y1 = Y/100
+summary(Y1)
+#hist(Y1)
+
+dat = read.csv("covid2.csv", sep=",")
+Y=dat$rate_mort_period2
+Y2 = Y/100
+summary(Y2)
+#hist(Y2)
+
+dat = read.csv("covid3.csv", sep=",")
+Y=dat$rate_mort_period3
+Y3 = Y/100
+summary(Y3)
+#hist(Y3)
+
+
+
+optG = 0
+optG = optim(par= c(0.5,1), fn=negativelogLikelihoodBeta, data = Y1)
+optG
+EY1 = optG$par[1]/(optG$par[1] + optG$par[2])
+EY1
+mean(Y1)
+
+optG = 0
+optG = optim(par= c(0.5,1), fn=negativelogLikelihoodBeta, data = Y2)
+optG
+EY2 = optG$par[1]/(optG$par[1] + optG$par[2])
+EY2
+mean(Y2)
+
+optG = 0
+optG = optim(par= c(0.5,1), fn=negativelogLikelihoodBeta, data = Y3)
+optG
+EY3 = optG$par[1]/(optG$par[1] + optG$par[2])
+EY3
+mean(Y3)
+options(warn=0)
+
+```
+
+## Question 4
+
+```{r}
+dat = read.csv("covid1.csv", sep=",")
+Y=dat$rate_mort_period1
+Y1 = Y/100
+
+dat = read.csv("covid3.csv", sep=",")
+Y=dat$rate_mort_period3
+Y3 = Y/100
+
+n1 = length(Y1)
+n3 = length(Y3)
+
+theta = 0
+t_hat = mean(Y1) - mean(Y3)
+t_hat
+
+sigma_t_hat = sqrt(  var(Y1)/length(Y1)  +  var(Y3)/length(Y3))
+sigma_t_hat
+
+zobs = (t_hat - theta)/sigma_t_hat
+
+alpha = 0.01
+z_alpha = qnorm(1-alpha)
+
+c(zobs, -z_alpha)
+
+C = 1*( zobs <=  - z_alpha )
+C
+
+
+
+
+
+
+
+```
+
+## Question 5 (Lobster landing)
+
+```{r}
+X = c(17.4, 18.9, 39.6, 34.4, 19.6, 33.7, 37.2, 43.4, 41.7, 27.5, 24.1, 39.6, 12.2, 25.5, 22.1, 29.3, 21.1, 23.8, 43.2, 24.4)
+
+summary(X)
+var(X)
+n = length(X)
+n
+
+tobs = (mean(X)-30.31) / (sqrt(var(X) / length(X)))
+
+alpha = 0.05
+ta = qt (p = 1-alpha, df = n-1)
+
+c(tobs, -ta)
+
+reject = 1*( tobs <= -ta )
+reject
+
+#(2) get p-value
+pt(tobs, df=n-1)
+
+
+
+
+
+
+```
+
+## Question 6 (trees)
+
+```{r}
+data(trees)
+#help(trees)
+
+ls(trees)
+
+Girth = trees[,1]
+Volume = trees[,3]
+
+X = Girth
+Y = Volume
+
+n = length(X)
+beta1hat = ( n * sum(X*Y) - sum(X)*sum(Y) ) / ( n* sum(X^2) - sum(X)^2 )
+beta0hat = ( sum(Y) - beta1hat * sum(X))/n
+
+c(beta0hat, beta1hat)
+
+x=seq(from= 0, to = 20,by = 0.01)
+y = beta0hat + beta1hat * x
+
+plot(Girth, Volume, main = "trees",
+     xlab = "Girth (inches)", ylab = "Volume (cubic ft)", pch=20)
+points(x, y, col=3,lwd=1, pch=20)
+abline(lm(Volume ~ Girth), col=2)
+legend(x = "bottomright",
+       col = c(1,3,2), lwd = 3,
+       legend = c('Girth vs Volume', 'fitted (x, y)', 'lm(Volume ~ Girth)'))
+
+
+#= my correction after graded:
+#= Because the line (y = beta0hat + beta1hat * x) represents the volume mean in the function of girth, the difference between the predicted volume and the true volume should show the normality.
+#= It plot is as if projected through the core of the line from the previous graph.
+#= I discussed this graph with Simon, he said, bell-shape doe snot always mean normal distributed. I need to look at his official solution plots. But he also said that this is out-of-scope of the class, it is in the "linear regression" course.
+yhat = beta0hat + beta1hat * X
+plot(density(yhat-Y), main = "normality check",
+     xlab = "VolumeHat - Volume", ylab = "density", pch=20)
+
+
+
+
+```
+
+## Question 7 (voters)
+
+```{r}
+X = c(76, 53, 59, 48)
+n = 200
+p = mean(X) / n
+
+pi = array(0, 4)
+for(i in 1:4){
+  pi[i] = X[i] / n
+  }
+c(p, pi[1], pi[2], pi[3], pi[4], mean(X))
+
+Ltheta_o = p^sum(X) * (1-p)^(4*n - sum(X))
+Ltheta_o
+Ltheta = prod(pi^X *(1-pi)^(n-X))
+Ltheta
+lambda = Ltheta_o / Ltheta
+value1 = -2 * log(lambda)
+
+#logA = sum(X) * log(p) + (4*n - sum(X)) * log (1-p)
+#logB = sum(X*log(pi) + (n - X) *log(1-pi))
+#logLambda = logA - logB
+#value1 = -2 * logLambda
+
+
+df= 3
+alpha = 0.05
+value2 = qchisq(1 - alpha, df)
+
+c(value1, value2)
+
+reject = 1*( value1 > value2 )
+reject
+
+```

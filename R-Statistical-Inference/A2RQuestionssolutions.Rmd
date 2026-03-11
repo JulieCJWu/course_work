@@ -1,0 +1,223 @@
+---
+title: "MATH_682_A2R Solutions"
+author: "Julie CJ Wu"
+date: "10/20/2023"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## QUESTION 4
+
+## Part (1), Q4-1
+
+Complete this code block:
+```{r}
+#Leave the seed unchanged
+set.seed(2023)
+
+sampleSize = 10000
+meanG = 3
+sdG = 4
+
+gaussianSample = rnorm(n = sampleSize, mean = meanG, sd = sdG)
+logNormalSample = exp(gaussianSample)
+
+# Summary statistics of both samples
+summary(gaussianSample)
+summary(logNormalSample)
+
+# FUNCTIONS THAT PLUG IN THE FORMULA
+# TO OBTAIN THEORETICAL VALUES
+muLN = function (mu, sigma){
+  muLN = exp (mu + (sigma^2)/2)
+  return(muLN)
+}
+
+varLN = function(mu, sigma){
+  sigma2LN = exp (2 * mu + sigma^2) * (exp(sigma^2) - 1)
+  return(sigma2LN)
+}
+
+mean = muLN(meanG, sdG)
+var = varLN(meanG,sdG)
+
+print(mean)
+print(var)
+```
+
+## Part (2), Q4-2
+
+Your code here:
+```{r}
+p = 0.75
+
+intervals = function(p, mean, sigma){ #chebyshev inequality
+  #if(p>1 or p<0){return}
+  k = sqrt(1/(1-p))
+  leftBound = mean - k * sigma
+  rightBound = mean + k * sigma
+  data = c(leftBound, rightBound)
+  return(data)
+}
+
+#= Compute the interval that you found for Q3(2)
+# Theoretical logNormal, chebyshev estimate
+sigma = sqrt(var)
+data = intervals(p, mean, sigma)
+leftBound = max(0, data[1])
+rightBound = data[2]
+# The interval I found for, (theoretically), three fourths of the grains whose weights lie in the following intervals:
+print(paste0(leftBound, " < grain weights (0.02 g) < ", rightBound))
+  
+  
+#= Find the proportion of your sample that fall into this interval.
+S1 = logNormalSample[leftBound<logNormalSample]
+S2 = logNormalSample[logNormalSample<=rightBound]
+lenIntersect = length(intersect(S1, S2))
+proportion = lenIntersect/ sampleSize
+print(paste0("proportion of my sample that fall into this interval: ", proportion))
+
+
+#= Find an interval in which exactly three fourths of the sample fall into
+rightBound = quantile(logNormalSample, probs =0.75)
+
+print(rightBound)
+print(paste0(0, " < grain weights (0.02 g) < ", rightBound))
+
+S1 = logNormalSample[0<logNormalSample]
+S2 = logNormalSample[logNormalSample<=rightBound]
+lenIntersect = length(intersect(S1, S2))
+proportion = lenIntersect/ sampleSize
+print(paste0("proportion of my sample that fall into this interval: ", proportion))
+
+#= My little test
+# using normal theoretical, then exp(x)
+data = intervals(p, 3, 4)
+leftBound = data[1]
+rightBound = data[2]
+YleftBound = exp(leftBound)
+YrightBound = exp(rightBound)
+print(paste0(YleftBound, " < grain weights (0.02 g) < ", YrightBound))
+
+```
+Comment on your findings here:
+
+A: In Q3(2), I obtained "0 < grain weights (0.02 g) < 357024274.1"
+
+B: In Q4(2), the R script offered (theoretical logNormal, chebyshev) "0 < grain weights (0.02 g) < 357024455.982552", with sampleSize = 10000.
+The bounds are similar but different between the R script and my calculation (A vs B). The precision I took for the variance of logNormal was less precise than what the R did, and in turn affected the precision of the sigma of logNormal. 
+
+However, 0.9998 of the generated sample lies within this interval, instead of 0.75.
+
+C: For experiment samples, to have 0.75 of the sample, the intervals are: "0 < grain weights (0.02 g) < 283.173683979835", which is much narrower than the theoretical one.
+
+The intervals between the theoretical and the experiment (B vs C) are very different. I wonder why the Chebyshev estimation does not work well. Is it because of the sample size? I increased the sample size to 1000000 but the right bound shifted to the right only a little: "5.09889632440795e-08 < grain weights (0.02 g) < 299.440325490666".
+
+D: Then I used normal distribution to estimate the bound of exponential and obtained exp(5.64606). So the interval is "0.00673794699908547 < grain weights (0.02 g) < 59874.1417151978". Based on what is in C, this approach (D) provides a better estimate than B.
+
+Overall, Chebyshev is meant to give an interval that covers the proportion with certainty. In this exercise, we saw that the Chebyshev gave an interval that covered 0.9998 of the sample, which is indeed greater than 0.75. On the other hand, I used quantile to find the 0.75 proportion, which basically limits my search from the minimum to the 75th-percentile; whereas Chebyshev tries to center on the mean. My approach in (D) appears to center on the median.
+
+
+## Part (3), Q4-3
+
+Your code here:
+```{r}
+#= Find the proportion of the sample that is less than the expectation found in Q3(1)
+len = length(logNormalSample[logNormalSample < mean])
+proportion = len/ sampleSize
+print(paste0("proportion of my sample that is less than the expectation found in Q3: ", proportion))
+
+#=  Compare it to the probability found in Q3 part (3)
+plnorm(mean, meanG, sdG) # probability in Q3(3)
+
+cat("sample medium", quantile(logNormalSample, 0.5))
+cat("sample mean", mean(logNormalSample))
+
+```
+Comment on your findings here:
+
+Theoretical logNormal mean is 59874.14. 
+With that, Q3(3) found P(y <= 59874.14) = 0.9772; Q4(3) found P(y <= 59874.14) = 0.9773.
+These two answers are very close. The minor difference could be contributed to the precision value of exp(11).
+
+These observations indicated that there are some sample points that have very large values, which cause the mean to shift to the right, greatly deviated from the medium.
+
+
+## QUESTION 6
+
+## Part (1), Q6-1
+
+Complete the code block:
+```{r}
+sampleSiZe = 200
+mixP = 0.3
+mu = -5
+sigma = 2 
+alpha = 2
+beta = 0.5
+
+# https://www.geeksforgeeks.org/simulate-binomial-or-bernoulli-trials-in-r/
+B = rbinom(n = sampleSiZe, size = 1, prob = mixP) # 200 Bernoulli trials
+Y1 = rnorm(n = sum(B == 1), mean = mu , sd = sigma)
+Y2 = rgamma(n = sum(B == 0), shape = alpha , rate = 1/beta)
+
+Y = c(Y1, Y2)
+
+```
+## Part (2), Q6-2
+
+Complete the code block:
+```{r}
+mixtureDensity = function(y, mu, sigma, alpha, beta, mixP){
+  mixD = mixP * dnorm(y, mu, sigma) + (1 - mixP) * dgamma(y, shape = alpha, scale = beta)
+  return(mixD)
+}
+
+y = seq(-15,15,by=0.01)
+fy = mixtureDensity(y, mu, sigma, alpha, beta, mixP)
+
+#= Histogram of the sample Y, which is a mixture of norm and gamma
+hist(Y, breaks = 30, probability = TRUE, xlim = c(-15,15), ylim = c(0,.6))
+#= density function of the theoretical distribution of norm and gamma.
+lines(y,fy, col = 2, lwd = 4)
+
+```
+ What do you expect the graph to look like as you increase the sample size?
+ Ans: As the sample size is increased, I expect the histogram shape to be more like the shape of the mixtureDensity line. And the proportions of samples coming from Y1 and Y2 will be close to 0.3 and 0.7, respectively.
+ 
+## Part (3), Q6-3
+
+Complete the code block:
+```{r}
+mixExp = function(mu, alpha, beta, mixP){
+  return(mixP*mu + (1-mixP)*alpha *beta)
+}
+
+mixVar = function(mu, sigma, alpha, beta, mixP){
+  return(mixP * sigma^2 + (1-mixP)*alpha*beta^2 + mixP*(1-mixP)*(mu - alpha*beta)^2)
+}
+
+mixExp(mu, alpha, beta, mixP)
+mean(Y)
+
+mixVar(mu, sigma, alpha, beta, mixP)
+var(Y)
+
+```
+Comment on your findings:
+
+(theoretical, mean=-0.8, var=9.11)
+
+I tested n = 200 and a larger sample size.
+
+(n, meanY, varY)
+
+(200,          -0.6645194, 8.472074)
+
+(2000000,     -0.7936877,   9.027782)
+
+It seems that as the sample size increases, meanY and varY are closer to the theoretical values.
+Overall, the theoretical mixture model represents well the distribution of the iid sample.
